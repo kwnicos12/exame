@@ -960,3 +960,176 @@ if (pagina === "dashboard.html") {
     cambiarVista("resumen");
     }
 });
+
+// ===============================
+// SECCIÓN 14: GESTIÓN DE ESTUDIANTES
+// ===============================
+
+// estructura:
+// estudiante = {
+// id,
+// identificacion,
+// nombres,
+// apellidos,
+// genero,
+// fecha_nacimiento,
+// direccion,
+// telefono,
+// cursos: [idCurso,idCurso]
+// }
+
+function inicializarEstudiantesUI() {
+
+  const form = document.getElementById("form-estudiante");
+
+  if(form){
+    form.addEventListener("submit", guardarEstudiante);
+  }
+
+  const btn = document.getElementById("btn-nuevo-estudiante");
+
+  if(btn){
+    btn.addEventListener("click",()=>{
+      cargarSelectCursosEstudiante();
+      abrirModal("modal-estudiante");
+    });
+  }
+
+}
+
+function cargarSelectCursosEstudiante(){
+
+  const select = document.getElementById("estudiante-cursos");
+
+  if(!select) return;
+
+  const cursos = DB.get("cursos");
+
+  select.innerHTML = cursos.map(c =>
+      `<option value="${c.id}">${c.nombre}</option>`
+  ).join("");
+
+}
+
+function guardarEstudiante(e){
+  e.preventDefault();
+  const form = e.target;
+  const editId = form.getAttribute("data-edit-id");
+  const cursosSeleccionados = [...document.getElementById("estudiante-cursos").selectedOptions]
+  .map(o => o.value);
+
+  const datos = {
+    id: editId || generarId(),
+    identificacion: document.getElementById("estudiante-identificacion").value.trim(),
+    nombres: document.getElementById("estudiante-nombres").value.trim(),
+    apellidos: document.getElementById("estudiante-apellidos").value.trim(),
+    genero: document.getElementById("estudiante-genero").value,
+    fecha_nacimiento: document.getElementById("estudiante-fecha").value,
+    direccion: document.getElementById("estudiante-direccion").value.trim(),
+    telefono: document.getElementById("estudiante-telefono").value.trim(),
+    cursos: cursosSeleccionados
+  };
+
+  for(const [k,v] of Object.entries(datos)){
+    if(k==="id" || k==="cursos") continue;
+    if(!v){
+      mostrarToast(`El campo ${k} es requerido`,"error");
+      return;
+    }
+  }
+  const estudiantes = DB.get("estudiantes");
+  if(editId){
+    const index = estudiantes.findIndex(e=>e.id===editId);
+    estudiantes[index] = datos;
+    mostrarToast("Estudiante actualizado");
+  }else{
+    estudiantes.push(datos);
+    mostrarToast("Estudiante registrado");
+    }
+    DB.set("estudiantes",estudiantes);
+    cerrarModal("modal-estudiante");
+    renderTablaEstudiantes();
+
+}
+
+function editarEstudiante(id){
+    const estudiantes = DB.get("estudiantes");
+    const est = estudiantes.find(e=>e.id===id);
+if(!est) return;
+abrirModal("modal-estudiante");
+    document.getElementById("estudiante-identificacion").value = est.identificacion;
+    document.getElementById("estudiante-nombres").value = est.nombres;
+    document.getElementById("estudiante-apellidos").value = est.apellidos;
+    document.getElementById("estudiante-genero").value = est.genero;
+    document.getElementById("estudiante-fecha").value = est.fecha_nacimiento;
+    document.getElementById("estudiante-direccion").value = est.direccion;
+    document.getElementById("estudiante-telefono").value = est.telefono;
+    cargarSelectCursosEstudiante();
+    const select = document.getElementById("estudiante-cursos");
+    [...select.options].forEach(opt=>{
+    if(est.cursos.includes(opt.value)){
+    opt.selected = true;
+    }
+    });
+
+    document.getElementById("form-estudiante").setAttribute("data-edit-id",id);
+
+}
+
+function eliminarEstudiante(id){
+
+    if(!confirm("¿Eliminar este estudiante?")) return;
+
+    const estudiantes = DB.get("estudiantes").filter(e=>e.id!==id);
+
+    DB.set("estudiantes",estudiantes);
+
+    mostrarToast("Estudiante eliminado");
+
+    renderTablaEstudiantes();
+
+}
+
+function renderTablaEstudiantes(){
+
+    const tbody = document.getElementById("table-estudiantes-body");
+
+    if(!tbody) return;
+
+    const estudiantes = DB.get("estudiantes");
+
+    const cursos = DB.get("cursos");
+
+if(estudiantes.length===0){
+
+    tbody.innerHTML = `<tr>
+    <td colspan="6" style="text-align:center">No hay estudiantes registrados</td>
+    </tr>`;
+
+    return;
+
+    }
+
+tbody.innerHTML = estudiantes.map(est=>{
+
+    const cursosEst = cursos
+    .filter(c=>est.cursos.includes(c.id))
+    .map(c=>c.nombre)
+    .join(", ");
+    return `
+    <tr>
+    <td>${est.identificacion}</td>
+    <td>${est.nombres} ${est.apellidos}</td>
+    <td>${est.genero}</td>
+    <td>${est.telefono}</td>
+    <td>${cursosEst}</td>
+    <td>
+    <button class="btn btn-secondary" onclick="editarEstudiante('${est.id}')">Editar</button>
+    <button class="btn" style="background:#dc3545;color:white"
+    onclick="eliminarEstudiante('${est.id}')">Eliminar</button>
+    </td>
+    </tr>
+    `;
+    }).join("");
+
+}

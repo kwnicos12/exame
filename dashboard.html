@@ -21,6 +21,7 @@
                     <li><a href="#" id="nav-cursos">gestion de cursos</a></li>
                     <li><a href="#" id="nav-docentes">gestion de docentes</a></li>
                     <li><a href="#" id="nav-admins">administrativos</a></li>
+                    <li><a href="#" id="nav-estudiantes">Estudiantes</a></li>
                 </ul>
             </nav>
             <div class="sidebar-footer">
@@ -146,6 +147,28 @@
                 </div>
             </div>
 
+            <div id="view-estudiantes" class="view-section" style="display: none;">
+                <div class="section-header">
+                    <h3>Gestión de Estudiantes</h3>
+                    <button class="btn btn-primary" onclick="abrirModalEstudiante()">+ Registrar Estudiante</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Identificación</th>
+                                <th>Nombre Completo</th>
+                                <th>Género</th>
+                                <th>Teléfono</th>
+                                <th>Cursos</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-estudiantes-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -177,14 +200,12 @@
                         </div>
                     </div>
                     <div class="form-group"><label>descripcion general</label><textarea class="form-control" rows="3"></textarea></div>
-                    
                     <div class="modules-section">
                         <h4>estructuracion de modulos y contenidos</h4>
                         <div class="module-builder">
                             <div class="form-group"><label>codigo del modulo</label><input type="text" class="form-control"></div>
                             <div class="form-group"><label>nombre del modulo</label><input type="text" class="form-control"></div>
                             <div class="form-group"><label>descripcion del modulo</label><input type="text" class="form-control"></div>
-                            
                             <h5>lecciones del modulo</h5>
                             <div class="form-group"><label>titulo leccion</label><input type="text" class="form-control"></div>
                             <div class="form-group"><label>contenido (texto/material)</label><textarea class="form-control" rows="2"></textarea></div>
@@ -239,7 +260,49 @@
             </div>
         </div>
     </div>
-<script src="./js/script.js"></script>
+
+    <div class="modal" id="modal-estudiante">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Registrar / Editar Estudiante</h3>
+                <span class="close-btn" onclick="document.getElementById('modal-estudiante').style.display='none'">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-estudiante">
+                    <input type="hidden" id="est-index">
+                    <div class="form-group">
+                        <label>Identificación</label>
+                        <input type="text" id="est-id" class="form-control" required>
+                    </div>
+                    <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-group"><label>Nombres</label><input type="text" id="est-nombres" class="form-control" required></div>
+                        <div class="form-group"><label>Apellidos</label><input type="text" id="est-apellidos" class="form-control" required></div>
+                    </div>
+                    <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-group">
+                            <label>Género</label>
+                            <select id="est-genero" class="form-control">
+                                <option value="M">Masculino</option>
+                                <option value="F">Femenino</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Fecha Nacimiento</label><input type="date" id="est-fecha" class="form-control" required></div>
+                    </div>
+                    <div class="form-group"><label>Dirección</label><input type="text" id="est-direccion" class="form-control"></div>
+                    <div class="form-group"><label>Teléfono</label><input type="text" id="est-telefono" class="form-control"></div>
+                    <div class="form-group">
+                        <label>Asociar Cursos</label>
+                        <div id="lista-cursos-check" style="max-height: 100px; overflow-y: auto; background: var(--bg-surface-alt); padding: 10px; border: 1px solid var(--border-subtle); border-radius: 8px;">
+                            </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Guardar Estudiante</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="./js/script.js"></script>
 
 </body>
 </html>

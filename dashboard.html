@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dashboard | project</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/components.css">
+    <link rel="stylesheet" href="./css/dashboard.css">
+</head>
+<body>
+    <div class="dashboard-layout">
+        
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <h2>IE ABC <span>Admin</span></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="#" class="active" id="nav-resumen">resumen</a></li>
+                    <li><a href="#" id="nav-cursos">gestion de cursos</a></li>
+                    <li><a href="#" id="nav-docentes">gestion de docentes</a></li>
+                    <li><a href="#" id="nav-admins">administrativos</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="index.html" id="logout-btn" class="btn btn-outline btn-block">cerrar sesion</a>
+            </div>
+        </aside>
+
+        <main class="dashboard-content">
+            <header class="content-header">
+                <div class="header-title">
+                    <h2 id="main-title">panel principal</h2>
+                    <p>bienvenido al sistema de gestion LMS</p>
+                </div>
+                <div class="header-user">
+                    <span>admin principal</span>
+                </div>
+            </header>
+
+            <div id="view-resumen" class="view-section">
+                <section class="stats-section">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>cursos activos</h3>
+                            <p class="stat-number" id="count-courses">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>docentes registrados</h3>
+                            <p class="stat-number" id="count-teachers">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>administrativos</h3>
+                            <p class="stat-number" id="count-admins">0</p>
+                        </div>
+                    </div>
+                </section>
+                <section class="management-section">
+                    <div class="section-header">
+                        <h3>accesos rapidos</h3>
+                        <div class="quick-actions">
+                            <button class="btn btn-primary">+ nuevo curso</button>
+                            <button class="btn btn-secondary">+ nuevo docente</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div id="view-cursos" class="view-section" style="display: none;">
+                <div class="filters-bar">
+                    <input type="text" class="form-control" placeholder="buscar por nombre...">
+                    <select class="form-control">
+                        <option value="">filtrar por estado</option>
+                        <option value="activo">activo</option>
+                        <option value="inactivo">inactivo</option>
+                    </select>
+                    <select class="form-control">
+                        <option value="">filtrar por tipo</option>
+                        <option value="tecnologia">tecnologia</option>
+                        <option value="ciencias">ciencias exactas</option>
+                    </select>
+                    <input type="date" class="form-control" title="fecha de creacion">
+                    <button class="btn btn-primary">+ nuevo curso</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>codigo</th>
+                                <th>nombre del curso</th>
+                                <th>categoria</th>
+                                <th>docente asignado</th>
+                                <th>estado</th>
+                                <th>acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-cursos-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="view-docentes" class="view-section" style="display: none;">
+                <div class="section-header">
+                    <h3>lista de docentes</h3>
+                    <button class="btn btn-primary">+ registrar docente</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>codigo</th>
+                                <th>identificacion</th>
+                                <th>nombres y apellidos</th>
+                                <th>area academica</th>
+                                <th>carga academica</th>
+                                <th>acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-docentes-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="view-admins" class="view-section" style="display: none;">
+                <div class="section-header">
+                    <h3>personal administrativo</h3>
+                    <button class="btn btn-primary">+ registrar administrativo</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>identificacion</th>
+                                <th>nombres</th>
+                                <th>email</th>
+                                <th>cargo</th>
+                                <th>acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-admins-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div class="modal" id="modal-curso">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>crear / editar curso</h3>
+                <span class="close-btn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-curso">
+                    <div class="form-grid">
+                        <div class="form-group"><label>codigo</label><input type="text" class="form-control" required></div>
+                        <div class="form-group"><label>nombre</label><input type="text" class="form-control" required></div>
+                        <div class="form-group"><label>categoria</label><input type="text" class="form-control" required></div>
+                        <div class="form-group"><label>duracion (horas)</label><input type="number" class="form-control" required></div>
+                        <div class="form-group"><label>etiquetas (separadas por coma)</label><input type="text" class="form-control"></div>
+                        <div class="form-group">
+                            <label>visibilidad</label>
+                            <select class="form-control">
+                                <option value="publico">publico</option>
+                                <option value="oculto">oculto</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>docente a cargo</label>
+                            <select class="form-control" id="select-docente-curso">
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group"><label>descripcion general</label><textarea class="form-control" rows="3"></textarea></div>
+                    
+                    <div class="modules-section">
+                        <h4>estructuracion de modulos y contenidos</h4>
+                        <div class="module-builder">
+                            <div class="form-group"><label>codigo del modulo</label><input type="text" class="form-control"></div>
+                            <div class="form-group"><label>nombre del modulo</label><input type="text" class="form-control"></div>
+                            <div class="form-group"><label>descripcion del modulo</label><input type="text" class="form-control"></div>
+                            
+                            <h5>lecciones del modulo</h5>
+                            <div class="form-group"><label>titulo leccion</label><input type="text" class="form-control"></div>
+                            <div class="form-group"><label>contenido (texto/material)</label><textarea class="form-control" rows="2"></textarea></div>
+                            <div class="form-group"><label>enlaces multimedia (videos, pdf, imagenes)</label><input type="url" class="form-control"></div>
+                            <button type="button" class="btn btn-secondary btn-block">+ agregar modulo al curso</button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block" style="margin-top: 20px;">guardar curso completo</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-docente">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>registrar docente</h3>
+                <span class="close-btn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-docente">
+                    <div class="form-group"><label>codigo</label><input type="text" class="form-control" required></div>
+                    <div class="form-group"><label>identificacion</label><input type="text" class="form-control" required></div>
+                    <div class="form-group"><label>nombres</label><input type="text" class="form-control" required></div>
+                    <div class="form-group"><label>apellidos</label><input type="text" class="form-control" required></div>
+                    <div class="form-group"><label>email</label><input type="email" class="form-control" required></div>
+                    <div class="form-group"><label>url foto del docente</label><input type="url" class="form-control" required></div>
+                    <div class="form-group"><label>area academica</label><input type="text" class="form-control" required></div>
+                    <div class="form-group"><label>contraseña</label><input type="password" id="docente-password" class="form-control"></div>
+                    <button type="submit" class="btn btn-primary btn-block">guardar docente</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-admin">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>registrar administrativo</h3>
+                <span class="close-btn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-admin">
+                    <div class="form-group"><label>identificacion</label><input type="text" class="form-control" required></div>
+                    <div class="form-group"><label>nombres</label><input type="text" class="form-control" required></div>
+                    <div class="form-group"><label>apellidos</label><input type="text" class="form-control" required></div>
+                    <div class="form-group"><label>email</label><input type="email" class="form-control" required></div>
+                    <div class="form-group"><label>telefono</label><input type="tel" class="form-control" required></div>
+                    <div class="form-group"><label>cargo</label><input type="text" class="form-control" required></div>
+                    <button type="submit" class="btn btn-primary btn-block">guardar administrativo</button>
+                </form>
+            </div>
+        </div>
+    </div>
+<script src="./js/script.js"></script>
+
+</body>
+</html>

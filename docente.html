@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>docente | LMS</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/components.css">
+    <link rel="stylesheet" href="./css/dashboard.css">
+    <link rel="stylesheet" href="./css/docente.css">
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <h2>IE ABC <span>Docente</span></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="#" class="active" id="nav-mis-cursos">mis cursos</a></li>
+                    <li><a href="#" id="nav-mi-perfil">mi perfil</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="index.html" id="logout-btn" class="btn btn-outline btn-block">cerrar sesion</a>
+            </div>
+        </aside>
+
+        <main class="dashboard-content">
+            <header class="content-header">
+                <div class="header-title">
+                    <h2 id="main-title">mis cursos</h2>
+                    <p>gestiona el contenido de tus cursos asignados</p>
+                </div>
+                <div class="header-user">
+                    <span id="docente-nombre"></span>
+                </div>
+            </header>
+
+            <div id="view-mis-cursos" class="view-section">
+                <div id="cursos-docente-container" class="courses-grid">
+                </div>
+            </div>
+
+            <div id="view-mi-perfil" class="view-section" style="display: none;">
+                <div id="perfil-container"></div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal" id="modal-modulo">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>gestionar modulo</h3>
+                <span class="close-btn" onclick="cerrarModal('modal-modulo')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <h4 id="modal-modulo-curso"></h4>
+                <form id="form-modulo">
+                    <input type="hidden" id="modulo-curso-id">
+                    <input type="hidden" id="modulo-edit-id">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>codigo del modulo</label>
+                            <input type="text" id="modulo-codigo" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>nombre del modulo</label>
+                            <input type="text" id="modulo-nombre" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>descripcion</label>
+                        <input type="text" id="modulo-descripcion" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-primary">guardar modulo</button>
+                </form>
+
+                <div id="lista-modulos" style="margin-top: 25px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-leccion">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>gestionar leccion</h3>
+                <span class="close-btn" onclick="cerrarModal('modal-leccion')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-leccion">
+                    <input type="hidden" id="leccion-curso-id">
+                    <input type="hidden" id="leccion-modulo-id">
+                    <input type="hidden" id="leccion-edit-id">
+                    <div class="form-group">
+                        <label>titulo de la leccion</label>
+                        <input type="text" id="leccion-titulo" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>intensidad horaria</label>
+                        <input type="text" id="leccion-intensidad" class="form-control" placeholder="ej: 2 horas">
+                    </div>
+                    <div class="form-group">
+                        <label>contenido</label>
+                        <textarea id="leccion-contenido" class="form-control" rows="4"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>enlaces multimedia (separados por coma)</label>
+                        <input type="text" id="leccion-multimedia" class="form-control" placeholder="urls separadas por coma">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">guardar leccion</button>
+                </form>
+        </div>
+    </div>
+            </div>
+
+    <script src="./js/script.js"></script>
+    <script>
+        let cursoSeleccionado = null;
+        let moduloExpandido = null;
+
+        function verificarSesionDocente() {
+            const sesion = DB.getObj("sesion");
+            if (!sesion || sesion.rol !== "docente") {
+                window.location.href = "login.html";
+                return null;
+            }
+            return sesion;
+        }
+
+        function cambiarVistaDocente(vista) {
+            document.getElementById("view-mis-cursos").style.display = vista === "cursos" ? "block" : "none";
+            document.getElementById("view-mi-perfil").style.display = vista === "perfil" ? "block" : "none";
+            document.getElementById("nav-mis-cursos").classList.toggle("active", vista === "cursos");
+            document.getElementById("nav-mi-perfil").classList.toggle("active", vista === "perfil");
+            document.getElementById("main-title").textContent = vista === "cursos" ? "mis cursos" : "mi perfil";
+            
+            if (vista === "cursos") renderMisCursos();
+            if (vista === "perfil") renderMiPerfil();
+        }
+
+        function inicializarDocente() {
+            const sesion = verificarSesionDocente();
+            if (!sesion) return;
+
+            document.getElementById("docente-nombre").textContent = sesion.nombre;
+
+            document.getElementById("nav-mis-cursos").addEventListener("click", (e) => {
+                e.preventDefault();
+                cambiarVistaDocente("cursos");
+            });
+            document.getElementById("nav-mi-perfil").addEventListener("click", (e) => {
+                e.preventDefault();
+                cambiarVistaDocente("perfil");
+            });
+            document.getElementById("logout-btn").addEventListener("click", (e) => {
+                e.preventDefault();
+                cerrarSesion();
+            });
+
+            document.getElementById("form-modulo").addEventListener("submit", guardarModulo);
+            document.getElementById("form-leccion").addEventListener("submit", guardarLeccion);
+
+            renderMisCursos();
+        }
+
+        function renderMisCursos() {
+            const sesion = DB.getObj("sesion");
+            const cursos = DB.get("cursos").filter(c => c.docente_id === sesion.usuario_id);
+            const container = document.getElementById("cursos-docente-container");
+
+            if (cursos.length === 0) {
+                container.innerHTML = `<p style="color:#888;text-align:center;grid-column:1/-1">no tienes cursos asignados.</p>`;
+                return;
+            }
+
+            container.innerHTML = cursos.map(curso => {
+                const modCount = (curso.modulos || []).length;
+                const leccCount = (curso.modulos || []).reduce((acc, m) => acc + (m.lecciones || []).length, 0);
+                return `
+                    <article class="course-card" style="background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.1)">
+                        <div class="course-content" style="padding:20px">
+                            <span class="badge-categoria">${curso.categoria || "sin categoria"}</span>
+                            <h3 style="margin:15px 0">${curso.nombre}</h3>
+                            <p style="color:#666;margin-bottom:15px">${curso.descripcion || ""}</p>
+                            <div style="display:flex;gap:20px;color:#888;font-size:0.9rem">
+                                <span><strong>modulos:</strong> ${modCount}</span>
+                                <span><strong>lecciones:</strong> ${leccCount}</span>
+                            </div>
+                            <button class="btn-gestionar" style="margin-top:15px;width:100%" onclick="abrirGestionCurso('${curso.id}')">
+                                gestionar modulos
+                            </button>
+                        </div>
+                    </article>`;
+            }).join("");
+        }
+
+        function abrirGestionCurso(cursoId) {
+            cursoSeleccionado = DB.get("cursos").find(c => c.id === cursoId);
+            if (!cursoSeleccionado) return;
+
+            document.getElementById("modal-modulo-curso").textContent = `curso: ${cursoSeleccionado.nombre}`;
+            document.getElementById("modulo-curso-id").value = cursoId;
+            document.getElementById("form-modulo").reset();
+            document.getElementById("modulo-edit-id").value = "";
+            renderListaModulos(cursoId);
+            abrirModal("modal-modulo");
+        }
+
+        function guardarModulo(e) {
+            e.preventDefault();
+            const cursoId = document.getElementById("modulo-curso-id").value;
+            const editId = document.getElementById("modulo-edit-id").value;
+
+            const datos = {
+                id: editId || generarId(),
+                codigo: document.getElementById("modulo-codigo").value.trim(),
+                nombre: document.getElementById("modulo-nombre").value.trim(),
+                descripcion: document.getElementById("modulo-descripcion").value.trim(),
+                lecciones: editId ? (cursoSeleccionado.modulos.find(m => m.id === editId)?.lecciones || []) : []
+            };
+
+            if (!datos.codigo || !datos.nombre) {
+                mostrarToast("codigo y nombre son requeridos", "error");
+                return;
+            }
+
+            const cursos = DB.get("cursos");
+            const idx = cursos.findIndex(c => c.id === cursoId);
+            if (idx === -1) return;
+
+            if (!cursos[idx].modulos) cursos[idx].modulos = [];
+
+            if (editId) {
+                const modIdx = cursos[idx].modulos.findIndex(m => m.id === editId);
+                if (modIdx !== -1) cursos[idx].modulos[modIdx] = datos;
+                mostrarToast("modulo actualizado");
+            } else {
+                cursos[idx].modulos.push(datos);
+                mostrarToast("modulo creado");
+            }
+
+            DB.set("cursos", cursos);
+            cursoSeleccionado = cursos.find(c => c.id === cursoId);
+            document.getElementById("form-modulo").reset();
+            document.getElementById("modulo-edit-id").value = "";
+            renderListaModulos(cursoId);
+        }
+
+        function renderListaModulos(cursoId) {
+            const curso = DB.get("cursos").find(c => c.id === cursoId);
+            if (!curso || !curso.modulos) {
+                document.getElementById("lista-modulos").innerHTML = "<p>no hay modulos</p>";
+                return;
+            }
+
+            document.getElementById("lista-modulos").innerHTML = curso.modulos.map(mod => {
+                const leccCount = (mod.lecciones || []).length;
+                const expandido = moduloExpandido === mod.id;
+                return `
+                    <div class="modulo-card">
+                        <div class="modulo-header">
+                            <div>
+                                <strong>${mod.codigo} - ${mod.nombre}</strong>
+                                <span style="color:#888;margin-left:10px">(${leccCount} lecciones)</span>
+                            </div>
+                            <div>
+                                <button class="btn-editar" onclick="editarModulo('${mod.id}')">editar</button>
+                                <button class="btn-eliminar" onclick="eliminarModulo('${mod.id}', '${cursoId}')">eliminar</button>
+                                <button class="btn btn-secondary" style="margin-left:10px" onclick="toggleLecciones('${mod.id}')">
+                                    ${expandido ? "ocultar" : "ver"} lecciones
+                                </button>
+                            </div>
+                        </div>
+                        <p style="margin:5px 0;color:#666">${mod.descripcion || ""}</p>
+                        <div id="lecciones-${mod.id}" class="${expandido ? "" : "panel-gestion"}">
+                            <button class="btn btn-primary btn-sm" onclick="abrirModalLeccion('${cursoId}', '${mod.id}')" style="margin-bottom:10px">
+                                + agregar leccion
+                            </button>
+                            <div id="lista-lecciones-${mod.id}">
+                                ${(mod.lecciones || []).map(lec => `
+                                    <div class="leccion-item">
+                                        <div class="leccion-header">
+                                            <strong>${lec.titulo}</strong>
+                                            <div>
+                                                <button class="btn-editar" onclick="editarLeccion('${lec.id}', '${mod.id}', '${cursoId}')">editar</button>
+                                                <button class="btn-eliminar" onclick="eliminarLeccion('${lec.id}', '${mod.id}', '${cursoId}')">eliminar</button>
+                                            </div>
+                                        </div>
+                                        <p style="margin:5px 0;color:#666;font-size:0.9rem">${lec.intensidad_horaria || ""}</p>
+                                        <p style="margin:5px 0;font-size:0.85rem">${lec.contenido || ""}</p>
+                                        ${lec.multimedia && lec.multimedia.length ? `
+                                            <div style="margin-top:5px">
+                                                ${lec.multimedia.map(url => `<a href="${url}" target="_blank" style="color:#4361ee;margin-right:10px">📎 recurso</a>`).join("")}
+                                            </div>
+                                        ` : ""}
+                                    </div>
+                                `).join("")}
+                            </div>
+                        </div>
+                    </div>`;
+            }).join("");
+        }
+
+        function toggleLecciones(moduloId) {
+            moduloExpandido = moduloExpandido === moduloId ? null : moduloId;
+            const cursoId = document.getElementById("modulo-curso-id").value;
+            renderListaModulos(cursoId);
+        }
+
+        function editarModulo(moduloId) {
+            const cursoId = document.getElementById("modulo-curso-id").value;
+            const curso = DB.get("cursos").find(c => c.id === cursoId);
+            const mod = curso.modulos.find(m => m.id === moduloId);
+            if (!mod) return;
+
+            document.getElementById("modulo-codigo").value = mod.codigo;
+            document.getElementById("modulo-nombre").value = mod.nombre;
+            document.getElementById("modulo-descripcion").value = mod.descripcion || "";
+            document.getElementById("modulo-edit-id").value = moduloId;
+        }
+
+        function eliminarModulo(moduloId, cursoId) {
+            if (!confirm("eliminar este modulo y todas sus lecciones?")) return;
+            
+            const cursos = DB.get("cursos");
+            const idx = cursos.findIndex(c => c.id === cursoId);
+            if (idx !== -1) {
+                cursos[idx].modulos = cursos[idx].modulos.filter(m => m.id !== moduloId);
+                DB.set("cursos", cursos);
+                cursoSeleccionado = cursos.find(c => c.id === cursoId);
+                mostrarToast("modulo eliminado");
+                renderListaModulos(cursoId);
+            }
+        }
+
+        function abrirModalLeccion(cursoId, moduloId) {
+            document.getElementById("leccion-curso-id").value = cursoId;
+            document.getElementById("leccion-modulo-id").value = moduloId;
+            document.getElementById("leccion-edit-id").value = "";
+            document.getElementById("form-leccion").reset();
+            abrirModal("modal-leccion");
+        }
+
+        function guardarLeccion(e) {
+            e.preventDefault();
+            const cursoId = document.getElementById("leccion-curso-id").value;
+            const moduloId = document.getElementById("leccion-modulo-id").value;
+            const editId = document.getElementById("leccion-edit-id").value;
+
+            const datos = {
+                id: editId || generarId(),
+                titulo: document.getElementById("leccion-titulo").value.trim(),
+                intensidad_horaria: document.getElementById("leccion-intensidad").value.trim(),
+                contenido: document.getElementById("leccion-contenido").value.trim(),
+                multimedia: document.getElementById("leccion-multimedia").value.trim() 
+                    ? document.getElementById("leccion-multimedia").value.split(",").map(s => s.trim()) 
+                    : []
+            };
+
+            if (!datos.titulo) {
+                mostrarToast("el titulo es requerido", "error");
+                return;
+            }
+
+            const cursos = DB.get("cursos");
+            const idx = cursos.findIndex(c => c.id === cursoId);
+            if (idx === -1) return;
+
+            const modIdx = cursos[idx].modulos.findIndex(m => m.id === moduloId);
+            if (modIdx === -1) return;
+
+            if (!cursos[idx].modulos[modIdx].lecciones) {
+                cursos[idx].modulos[modIdx].lecciones = [];
+            }
+
+            if (editId) {
+                const lecIdx = cursos[idx].modulos[modIdx].lecciones.findIndex(l => l.id === editId);
+                if (lecIdx !== -1) cursos[idx].modulos[modIdx].lecciones[lecIdx] = datos;
+                mostrarToast("leccion actualizada");
+            } else {
+                cursos[idx].modulos[modIdx].lecciones.push(datos);
+                mostrarToast("leccion creada");
+            }
+
+            DB.set("cursos", cursos);
+            cursoSeleccionado = cursos.find(c => c.id === cursoId);
+            cerrarModal("modal-leccion");
+            renderListaModulos(cursoId);
+        }
+
+        function editarLeccion(leccionId, moduloId, cursoId) {
+            const curso = DB.get("cursos").find(c => c.id === cursoId);
+            const mod = curso.modulos.find(m => m.id === moduloId);
+            const lec = mod.lecciones.find(l => l.id === leccionId);
+            if (!lec) return;
+
+            document.getElementById("leccion-curso-id").value = cursoId;
+            document.getElementById("leccion-modulo-id").value = moduloId;
+            document.getElementById("leccion-edit-id").value = leccionId;
+            document.getElementById("leccion-titulo").value = lec.titulo;
+            document.getElementById("leccion-intensidad").value = lec.intensidad_horaria || "";
+            document.getElementById("leccion-contenido").value = lec.contenido || "";
+            document.getElementById("leccion-multimedia").value = (lec.multimedia || []).join(", ");
+            abrirModal("modal-leccion");
+        }
+
+        function eliminarLeccion(leccionId, moduloId, cursoId) {
+            if (!confirm("eliminar esta leccion?")) return;
+
+            const cursos = DB.get("cursos");
+            const idx = cursos.findIndex(c => c.id === cursoId);
+            if (idx !== -1) {
+                const modIdx = cursos[idx].modulos.findIndex(m => m.id === moduloId);
+                if (modIdx !== -1) {
+                    cursos[idx].modulos[modIdx].lecciones = cursos[idx].modulos[modIdx].lecciones.filter(l => l.id !== leccionId);
+                    DB.set("cursos", cursos);
+                    cursoSeleccionado = cursos.find(c => c.id === cursoId);
+                    mostrarToast("leccion eliminada");
+                    renderListaModulos(cursoId);
+                }
+            }
+        }
+
+        function renderMiPerfil() {
+            const sesion = DB.getObj("sesion");
+            const docente = DB.get("docentes").find(d => d.id === sesion.usuario_id);
+            if (!docente) return;
+
+            const cursos = DB.get("cursos").filter(c => c.docente_id === sesion.usuario_id);
+            const totalModulos = cursos.reduce((acc, c) => acc + (c.modulos || []).length, 0);
+
+            document.getElementById("perfil-container").innerHTML = `
+                <div class="perfil-docente">
+                    <img src="${docente.url_foto || 'https://via.placeholder.com/150'}" alt="foto" class="perfil-foto">
+                    <div class="perfil-info">
+                        <h3>${docente.nombres} ${docente.apellidos}</h3>
+                        <p><strong>codigo:</strong> ${docente.codigo}</p>
+                        <p><strong>identificacion:</strong> ${docente.identificacion}</p>
+                        <p><strong>email:</strong> ${docente.email}</p>
+                        <p><strong>area academica:</strong> ${docente.area_academica}</p>
+                    </div>
+                </div>
+                <div class="stats-docente">
+                    <div class="stat-card-docente">
+                        <h3>${cursos.length}</h3>
+                        <p>cursos a cargo</p>
+                    </div>
+                    <div class="stat-card-docente">
+                        <h3>${totalModulos}</h3>
+                        <p>modulos gestionados</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            inicializarDatos();
+            inicializarDocente();
+        });
+    </script>
+</body>
+</html>

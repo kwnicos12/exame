@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>login | project</title>
+    <link rel="stylesheet" href="./css/login.css">
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h2>IE ABC <span>LMS</span></h2>
+                <p>acceso a la plataforma</p>
+            </div>
+            
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="role">tipo de usuario</label>
+                    <select id="role" class="form-control" required onchange="toggleLoginFields()">
+                        <option value="admin">administrador</option>
+                        <option value="docente">docente</option>
+                        <option value="estudiante">estudiante</option>
+                    </select>
+                </div>
+                <div id="credenciales-admin" class="credenciales-fields">
+                    <div class="form-group">
+                        <label for="email">correo electronico</label>
+                        <input type="email" id="email" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">contraseña</label>
+                        <input type="password" id="password" class="form-control">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" id="btn-ingresar">ingresar</button>
+            </form>
+            <script>
+                function toggleLoginFields() {
+                    const rol = document.getElementById("role").value;
+                    const credFields = document.getElementById("credenciales-admin");
+                    const emailInput = document.getElementById("email");
+                    const passwordInput = document.getElementById("password");
+                    
+                    if (rol === "estudiante") {
+                        credFields.style.display = "none";
+                        emailInput.required = false;
+                        passwordInput.required = false;
+                    } else {
+                        credFields.style.display = "block";
+                        emailInput.required = true;
+                        passwordInput.required = true;
+                    }
+                }
+            </script>
+            
+            <div class="login-footer">
+                <a href="index.html" class="back-link">volver al inicio</a>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="./js/script.js"></script>
+
+</html>

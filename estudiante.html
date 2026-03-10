@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>estudiante | LMS</title>
+    <link rel="stylesheet" href="./css/estudiante.css">
+</head>
+
+<body>
+    <header class="estudiante-header">
+        <div class="container">
+            <h1>IE ABC <span>LMS</span></h1>
+            <a href="index.html" >volver al inicio</a>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <section class="catalogo-section" id="catalogo">
+            <h2>catalogo de cursos</h2>
+            <p>explora nuestra oferta academica y comienza a aprender</p>
+            <div class="courses-grid" id="courses-container"></div>
+        </section>
+
+        <section class="detalle-curso" id="detalle-curso">
+            <span class="btn-volver" onclick="volverCatalogo()">← volver al catalogo</span>
+            <div id="detalle-contenido"></div>
+        </section>
+    </main>
+
+    <script src="./js/script.js"></script>
+    <script>
+        function renderCatalogo() {
+            const cursos = DB.get("cursos").filter(c => c.visibilidad === "publico");
+            const docentes = DB.get("docentes");
+            const container = document.getElementById("courses-container");
+
+            if (cursos.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column:1/-1">
+                        <h3>no hay cursos disponibles</h3>
+                        <p>por el momento no hay cursos publicos disponibles.</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = cursos.map(curso => {
+                const doc = docentes.find(d => d.id === curso.docente_id);
+                const docNombre = doc ? `${doc.nombres} ${doc.apellidos}` : "sin asignar";
+                const modCount = (curso.modulos || []).length;
+                const leccCount = (curso.modulos || []).reduce((acc, m) => acc + (m.lecciones || []).length, 0);
+
+                return `
+                    <article class="course-card">
+                        <div class="course-image">
+                            <div class="img-placeholder">${(curso.categoria || "curso").toUpperCase()}</div>
+                        </div>
+                        <div class="course-content">
+                            <span class="course-tag">${curso.categoria || "general"}</span>
+                            <h3>${curso.nombre}</h3>
+                            <p class="course-description">${curso.descripcion || "sin descripcion"}</p>
+                            <div class="course-meta">
+                                <span><strong>docente:</strong> ${docNombre}</span>
+                                <span><strong>lecciones:</strong> ${leccCount}</span>
+                            </div>
+                        </div>
+                        <div class="course-footer">
+                            <button class="btn-explorar" onclick="verDetalle('${curso.id}')">explorar curso</button>
+                        </div>
+                    </article>`;
+            }).join("");
+        }
+
+        function verDetalle(cursoId) {
+            const curso = DB.get("cursos").find(c => c.id === cursoId);
+            if (!curso) return;
+
+            const docentes = DB.get("docentes");
+            const doc = docentes.find(d => d.id === curso.docente_id);
+            const docNombre = doc ? `${doc.nombres} ${doc.apellidos}` : "sin asignar";
+
+            document.getElementById("catalogo").classList.add("hidden");
+            document.getElementById("detalle-curso").classList.add("active");
+
+            document.getElementById("detalle-contenido").innerHTML = `
+                <div class="detalle-header">
+                    <span class="badge-categoria">${curso.categoria || "general"}</span>
+                    <h2>${curso.nombre}</h2>
+                    <p>${curso.descripcion || "sin descripcion"}</p>
+                    <div class="docente-info">
+                        <strong>docente:</strong> ${docNombre}
+                    </div>
+                </div>
+                <div class="modulos-container">
+                    ${(curso.modulos || []).map((mod, idx) => {
+                const leccCount = (mod.lecciones || []).length;
+                return `
+                            <div class="modulo-card" id="modulo-${idx}">
+                                <div class="modulo-header" onclick="toggleModulo(${idx})">
+                                    <h4>${mod.codigo} - ${mod.nombre}</h4>
+                                    <span class="lecc-count">${leccCount} lecciones</span>
+                                </div>
+                                <div class="modulo-contenido">
+                                    <p>${mod.descripcion || "sin descripcion"}</p>
+                                    <div class="lecciones-list">
+                                        ${(mod.lecciones || []).map(lec => `
+                                            <div class="leccion-item">
+                                                <h5>${lec.titulo}</h5>
+                                                ${lec.intensidad_horaria ? `<div class="intensidad">${lec.intensidad_horaria}</div>` : ""}
+                                                ${lec.contenido ? `<div class="contenido">${lec.contenido}</div>` : ""}
+                                                ${lec.multimedia && lec.multimedia.length ? `
+                                                    <div class="multimedia">
+                                                        ${lec.multimedia.map(url => `<a href="${url}" target="_blank">📎 ver recurso</a>`).join("")}
+                                                    </div>
+                                                ` : ""}
+                                            </div>
+                                        `).join("")}
+                                        ${(!mod.lecciones || mod.lecciones.length === 0) ? "<p style='color:#888'>sin lecciones</p>" : ""}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+            }).join("")}
+                    ${(!curso.modulos || curso.modulos.length === 0) ? "<p style='color:#888;text-align:center'>sin modulos disponibles</p>" : ""}
+                </div>
+            `;
+        }
+
+        function toggleModulo(idx) {
+            const card = document.getElementById(`modulo-${idx}`);
+            card.classList.toggle("expanded");
+        }
+
+        function volverCatalogo() {
+            document.getElementById("detalle-curso").classList.remove("active");
+            document.getElementById("catalogo").classList.remove("hidden");
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            inicializarDatos();
+            renderCatalogo();
+        });
+    </script>
+</body>
+
+</html>
